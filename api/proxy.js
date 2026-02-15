@@ -6,7 +6,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch(`https://trackmania.io/api/${path}`);
+    const response = await fetch(`https://trackmania.io/api/${path}`, {
+      headers: {
+        "User-Agent": "TrackmaniaOverlayProject/1.0 (contact: discord-lvyathan)"
+      }
+    });
+
     const data = await response.json();
 
     res.setHeader("Access-Control-Allow-Origin", "*");
