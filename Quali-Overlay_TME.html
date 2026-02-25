@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+#overlay {
+  width: 1920px;
+  height: 1080px;
+  position: relative;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: white;
+}
+
+.name {
+  position: absolute;
+  white-space: nowrap;
+}
+
+.time {
+  position: absolute;
+  width: 150px;
+  text-align: right;
+}
+
+/* WR */
+#wrName { left: 85px; top: 296px; }
+#wrTime { left: 200px; top: 296px; }
+
+/* Top 10 */
+.topName { left: 85px; }
+.topTime { left: 200px; }
+
+/* 60th–64th (At Risk) */
+.riskName { left: 85px; }
+.riskTime { left: 200px; }
+
+
+/* Debug */
+#debug {
+  position:absolute;
+  left:40px;
+  top:980px;
+  font-size:16px;
+  opacity:0;
+}
+</style>
+</head>
+
+<body>
+<div id="overlay">
+
+  <!-- WR -->
+  <div id="wrName" class="name"></div>
+  <div id="wrTime" class="time"></div>
+
+  <!-- Top 10 -->
+  <div id="topContainer"></div>
+
+  <!-- 60–64 At Risk -->
+  <div id="riskContainer"></div>
+
+
+  <!-- Debug -->
+  <div id="debug">
+    Quali refresh in: <span id="qualiCountdown">10</span>s<br>
+    WR refresh in: <span id="wrCountdown">60</span>s<br>
+    Last Quali Update: <span id="lastQuali">-</span><br>
+    Last WR Update: <span id="lastWR">-</span>
+  </div>
+
+</div>
+
+<script src="config.js"></script>
+
+<script>
+
+/* ==============================
+   CONFIG
+============================== */
+
+const QUALI_URL =
+  CONFIG.PROXY_BASE +
+  `comp/${CONFIG.QUALI.COMP_ID}/challenge/${CONFIG.QUALI.CHALLENGE_ID}/0`;
+
+const WR_URL =
+  CONFIG.PROXY_BASE +
+  `leaderboard/${CONFIG.WR.CAMPAIGN_UID}/${CONFIG.WR.MAP_UID}?length=1`;
+
+
+const ROW_START_Y = 383;
+const ROW_GAP = 32;
+
+let qualiTimer = 10;
+let wrTimer = 60;
+
+/* ==============================
+   HELPERS
+============================== */
+
+function formatTime(ms) {
+  if (!ms) return "-";
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  const milliseconds = ms % 1000;
+
+  return `${minutes}:${String(seconds).padStart(2,'0')}.${String(milliseconds).padStart(3,'0')}`;
+}
+
+/* ==============================
+   LOAD QUALI
+============================== */
+
+async function loadQuali() {
+  try {
+    const res = await fetch(QUALI_URL + "&t=" + Date.now());
+    const data = await res.json();
+
+    const players = data?.results || data?.tops || [];
+    if (!players.length) return;
+
+    const container = document.getElementById("topContainer");
+    container.innerHTML = "";
+
+    players.slice(0,10).forEach((player, index) => {
+
+      const y = ROW_START_Y + (index * ROW_GAP);
+
+      const name = document.createElement("div");
+      name.className = "name topName";
+      name.style.top = y + "px";
+      name.innerText = player.player?.name || "-";
+
+      const time = document.createElement("div");
+      time.className = "time topTime";
+      time.style.top = y + "px";
+      time.innerText = formatTime(player.score);
+
+      container.appendChild(name);
+      container.appendChild(time);
+    });
+
+/* ==============================
+   60th–64th (At Risk)
+============================== */
+
+const riskContainer = document.getElementById("riskContainer");
+riskContainer.innerHTML = "";
+
+if (players.length >= 64) {
+
+  const RISK_START_Y = 758;  // adjust if needed
+
+  players.slice(59, 64).forEach((player, index) => {
+
+    const y = RISK_START_Y + (index * ROW_GAP);
+
+    const name = document.createElement("div");
+    name.className = "name riskName";
+    name.style.top = y + "px";
+    name.innerText = player.player?.name || "-";
+
+    const time = document.createElement("div");
+    time.className = "time riskTime";
+    time.style.top = y + "px";
+    time.innerText = formatTime(player.score);
+
+    riskContainer.appendChild(name);
+    riskContainer.appendChild(time);
+  });
+}
+
+
+    document.getElementById("lastQuali").innerText =
+      new Date().toLocaleTimeString();
+
+  } catch (err) {
+    console.error("Quali error:", err);
+  }
+}
+
+/* ==============================
+   LOAD WR
+============================== */
+
+async function loadWR() {
+  try {
+    const res = await fetch(WR_URL + "&t=" + Date.now());
+    const data = await res.json();
+
+    const wr = data?.tops?.[0];
+    if (!wr) return;
+
+    document.getElementById("wrName").innerText =
+      wr.player?.name || "-";
+
+    document.getElementById("wrTime").innerText =
+      formatTime(wr.score);
+
+    document.getElementById("lastWR").innerText =
+      new Date().toLocaleTimeString();
+
+  } catch (err) {
+    console.error("WR error:", err);
+  }
+}
+
+/* ==============================
+   TIMER SYSTEM
+============================== */
+
+function updateClock() {
+
+  qualiTimer--;
+  wrTimer--;
+
+  if (qualiTimer <= 0) {
+    loadQuali();
+    qualiTimer = 10;
+  }
+
+  if (wrTimer <= 0) {
+    loadWR();
+    wrTimer = 60;
+  }
+
+  document.getElementById("qualiCountdown").innerText = qualiTimer;
+  document.getElementById("wrCountdown").innerText = wrTimer;
+}
+
+/* ==============================
+   INIT
+============================== */
+
+loadQuali();
+loadWR();
+setInterval(updateClock, 1000);
+
+</script>
+</body>
+</html>

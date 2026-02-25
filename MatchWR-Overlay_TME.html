@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
+#overlay {
+  width: 1920px;
+  height: 1080px;
+  position: relative;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: white;
+}
+
+.name {
+  position: absolute;
+  white-space: nowrap;
+}
+
+.time {
+  position: absolute;
+  width: 150px;
+  text-align: right;
+}
+
+/* WR */
+#wrName { left: 45px; top: 314px; }
+#wrTime { left: 160px; top: 314px; }
+
+</style>
+</head>
+
+<body>
+<div id="overlay">
+
+  <!-- WR -->
+  <div id="wrName" class="name"></div>
+  <div id="wrTime" class="time"></div>
+
+</div>
+
+<script src="config.js"></script>
+
+<script>
+
+/* ==============================
+   CONFIG
+============================== */
+
+const WR_URL =
+  CONFIG.PROXY_BASE +
+  `leaderboard/${CONFIG.WR.CAMPAIGN_UID}/${CONFIG.WR.MAP_UID}?length=1`;
+
+let wrTimer = 60;
+
+/* ==============================
+   HELPERS
+============================== */
+
+function formatTime(ms) {
+  if (!ms) return "-";
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  const milliseconds = ms % 1000;
+
+  return `${minutes}:${String(seconds).padStart(2,'0')}.${String(milliseconds).padStart(3,'0')}`;
+}
+
+async function loadWR() {
+  try {
+    const res = await fetch(WR_URL + "&t=" + Date.now());
+    const data = await res.json();
+
+    const wr = data?.tops?.[0];
+    if (!wr) return;
+
+    document.getElementById("wrName").innerText =
+      wr.player?.name || "-";
+
+    document.getElementById("wrTime").innerText =
+      formatTime(wr.score);
+
+    document.getElementById("lastWR").innerText =
+      new Date().toLocaleTimeString();
+
+  } catch (err) {
+    console.error("WR error:", err);
+  }
+}
+
+/* ==============================
+   TIMER SYSTEM
+============================== */
+
+function updateClock() {
+
+  qualiTimer--;
+  wrTimer--;
+
+  if (qualiTimer <= 0) {
+    loadQuali();
+    qualiTimer = 10;
+  }
+
+  if (wrTimer <= 0) {
+    loadWR();
+    wrTimer = 60;
+  }
+
+  document.getElementById("qualiCountdown").innerText = qualiTimer;
+  document.getElementById("wrCountdown").innerText = wrTimer;
+}
+
+/* ==============================
+   INIT
+============================== */
+
+loadWR();
+setInterval(updateClock, 1000);
+
+</script>
+</body>
+</html>
