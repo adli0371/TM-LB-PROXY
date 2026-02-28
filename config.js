@@ -19,10 +19,11 @@ const CONFIG = {
       { keywords: ["CarlJr", "Spam", "FAL"], fullName: "Falcons Esports" },
       { keywords: ["Massa", "Granady", "BIG"], fullName: "BIG" },
       { keywords: ["Epos", "Liquid", "TL"], fullName: "Team Liquid" },
-      { keywords: ["Elconn", "NEM"], fullName: "Nemesis" },
+      { keywords: ["Elconn", "NEM"], fullName: "Team Nemesis" },
       { keywords: ["Mime", "NAVI"], fullName: "Natus Vincere" },
       { keywords: ["Wosile", "GEN"], fullName: "Gen.G" },
       { keywords: ["Nayko", "FUT"], fullName: "FUT Esports" }
+      { keywords: ["Heav", "Weibo"], fullName: "Weibo Gaming" }
     ]
   },
 
@@ -36,4 +37,5 @@ const CONFIG = {
     MAP_UID: "ojMNOzxBR2kqhH3T5z3ZqtGca98"
   }
 };
+
 
