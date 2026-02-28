@@ -9,7 +9,8 @@ const CONFIG = {
   STANDINGS: {
     MATCHES: [
       "comp/41163/match/132456/0",
-      "comp/41289/match/132863/0"
+      "comp/41289/match/132863/0",
+       
     ],
     TEAMS: [
       { keywords: ["Bren", "TwistedMinds"], fullName: "Twisted Minds" },
@@ -26,12 +27,13 @@ const CONFIG = {
   },
 
   QUALI: {
-    COMP_ID: 41289,
-    CHALLENGE_ID: 19445
+    COMP_ID: 41423,
+    CHALLENGE_ID: 19566
   },
 
   WR: {
     CAMPAIGN_UID: "NLS-3bSJJT2tUkmz2kZPUcVEfGPe2E35kcm4kop",
-    MAP_UID: "BtYymvmqtzeD6rr8YU5PIwyH6oa"
+    MAP_UID: "ojMNOzxBR2kqhH3T5z3ZqtGca98"
   }
 };
+
