@@ -8,96 +8,157 @@
 <style>
 body { margin: 0; background: transparent; overflow: hidden; }
 
-/* Invisible Toggle Hitbox - Covers left half of the screen */
-#toggleBtn {
+/* Top Left Hitbox: EWC (Top 8) */
+#ewcBtn {
   position: absolute;
   top: 0;
   left: 0;
-  width: 50vw;       
-  height: 100vh;      
-  background: transparent; 
+  width: 50vw;
+  height: 50vh;
+  background: transparent;
   border: none;
-  cursor: pointer;    
-  z-index: 9999;      
+  cursor: pointer;
+  z-index: 10001;
   outline: none;
 }
 
-/* Master Grid Position */
-.standings {
+/* Bottom Left Hitbox: ENC (Top 16 Nations) */
+#encBtn {
   position: absolute;
-  left: 134px; 
-  top: 365px;
-  display: grid;
-  grid-template-rows: repeat(8, 56px);
-  grid-auto-flow: column;
-  row-gap: 10px;    
-  column-gap: 10px; 
+  top: 50vh;
+  left: 0;
+  width: 50vw;
+  height: 50vh;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 10001;
+  outline: none;
 }
 
-/* The Total 406px Row */
+/* Right Half Hitbox: Page Toggle (or Return to All) */
+#pageToggleBtn {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 50vw;
+  height: 100vh;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 10000;
+  outline: none;
+}
+
+/* Header Section */
+#header-container {
+  position: absolute;
+  left: 134px;
+  top: 239px;
+  width: 1654px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+#header-title {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 64px;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  margin-bottom: 30px;
+  line-height: 1;
+}
+
+#header-line {
+  width: 100%;
+  height: 2px;
+  background: white;
+  margin-bottom: 30px;
+}
+
+/* Master Grid: Fixed Total Size 1654x518 */
+.standings {
+  position: absolute;
+  left: 134px;
+  top: 365px;
+  width: 1654px;
+  height: 518px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(8, 56px);
+  grid-auto-flow: column;
+  row-gap: 10px;
+  column-gap: 10px;
+}
+
 .standing-item {
-  width: 406px;
-  height: 56px;
   display: flex;
   align-items: center;
-  justify-content: space-between; 
-  padding-right: 15px; 
-  box-sizing: border-box;
+  height: 56px;
+  width: 100%;
   font-family: 'Montserrat', sans-serif;
   color: white;
   animation: fadeIn 0.4s ease-out;
 }
 
-/* Left-Aligned Group: Rank + Flag + Name */
+.rank-number {
+  width: 56px;
+  height: 56px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #262626;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.player-data-box {
+  flex-grow: 1;
+  height: 56px;
+  background: rgba(0, 0, 0, 0.65);
+  border: 1px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 15px;
+  box-sizing: border-box;
+}
+
 .name-meta-wrapper {
   display: flex;
   align-items: center;
 }
 
-/* 56x56 Centered Rank Box */
-.rank-number {
-  width: 56px;
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  color: #262626; 
-  font-size: 28px;
-  font-weight: 600;
-}
-
-/* Flag Icon */
 .flag-icon {
   width: 32px;
   height: auto;
-  margin-left: 20px; 
+  margin-right: 15px;
   flex-shrink: 0;
-  box-shadow: 0 0 4px rgba(0,0,0,0.5);
 }
 
-/* Vertical Text Stack */
 .name-meta-text-wrapper {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   line-height: 1.1;
-  margin-left: 15px; 
 }
 
 .player-name {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 600;
 }
 
 .team-full-name {
-  font-size: 14px;
-  color: #adadad; 
+  font-size: 12px;
+  color: #adadad;
   font-weight: 400;
   text-transform: uppercase;
 }
 
-/* Points Styling */
 .points-val {
   font-size: 24px;
   font-weight: 600;
@@ -112,44 +173,39 @@ body { margin: 0; background: transparent; overflow: hidden; }
 
 <body>
 
-<button id="toggleBtn" onclick="togglePage()"></button>
+<button id="ewcBtn" onclick="setMode('EWC')"></button>
+<button id="encBtn" onclick="setMode('ENC')"></button>
+<button id="pageToggleBtn" onclick="togglePage()"></button>
+
+<div id="header-container">
+  <div id="header-title">ELITE CUP STANDINGS</div>
+  <div id="header-line"></div>
+</div>
 
 <div class="standings" id="standings"></div>
 
 <script src="config.js"></script>
 <script>
 /* ===============================
-   CONFIG & STATE
+   STATE & CONSTANTS
 ================================ */
 let championship = {};
 let allFinalData = []; 
 let currentPage = 1;
+let viewMode = 'ALL'; 
 
 const TM_TO_ISO = {
   "eng": "gb", "sct": "gb", "wal": "gb", "en": "gb", "gbr": "gb",
-  "swe": "se", "nor": "no", "den": "dk", "fin": "fi", "ned": "nl", 
-  "bel": "be", "lux": "lu", "irl": "ie", "ger": "de", "sui": "ch", 
-  "aut": "at", "pol": "pl", "cze": "cz", "svk": "sk", "slo": "si", 
-  "cro": "hr", "hun": "hu", "rom": "ro", "bul": "bg", "gre": "gr", 
+  "swe": "se", "nor": "no", "den": "dk", "fin": "fi", "ned": "nl",
+  "bel": "be", "lux": "lu", "irl": "ie", "ger": "de", "sui": "ch",
+  "aut": "at", "pol": "pl", "cze": "cz", "svk": "sk", "slo": "si",
+  "cro": "hr", "hun": "hu", "rom": "ro", "bul": "bg", "gre": "gr",
   "tur": "tr", "fra": "fr", "esp": "es", "ita": "it", "por": "pt",
   "usa": "us", "can": "ca", "bra": "br", "aus": "au", "nzl": "nz", "rsa": "za"
 };
 
-const TEAMS = [
-  { keywords: ["Bren", "TwistedMinds"], fullName: "Twisted Minds" },
-  { keywords: ["Gwen", "Binkss", "AGG"], fullName: "All Gamers Global" },
-  { keywords: ["Tjalic", "Glast", "BS+"], fullName: "BS+COMPETITION" },
-  { keywords: ["CarlJr", "Spam", "FAL"], fullName: "Falcons Esports" },
-  { keywords: ["Massa", "Granady", "BIG"], fullName: "BIG" },
-  { keywords: ["Epos", "Liquid", "TL"], fullName: "Team Liquid" },
-  { keywords: ["Elconn", "NEM"], fullName: "Nemesis" },
-  { keywords: ["Mime", "NAVI"], fullName: "Natus Vincere" },
-  { keywords: ["Wosile", "GEN"], fullName: "Gen.G" },
-  { keywords: ["Nayko", "FUT"], fullName: "FUT Esports" }
-];
-
 /* ===============================
-   CORE LOGIC
+   LOGIC
 ================================ */
 function getPoints(position) {
   if (position === 1) return 1000;
@@ -178,7 +234,6 @@ function findCountryCode(playerObj) {
   return "un";
 }
 
-/* Update getTeamData to use the config */
 function getTeamData(playerName) {
   const nameUpper = playerName.toUpperCase();
   return CONFIG.STANDINGS.TEAMS.find(team => 
@@ -186,8 +241,35 @@ function getTeamData(playerName) {
   ) || null;
 }
 
+function updateHeaderAndGrid() {
+  const title = document.getElementById("header-title");
+  const container = document.getElementById("standings");
+
+  if (viewMode === 'ENC') {
+    title.textContent = "ENC STANDINGS";
+    container.style.gridTemplateColumns = "repeat(2, 1fr)";
+  } else if (viewMode === 'EWC') {
+    title.textContent = "EWC STANDINGS";
+    container.style.gridTemplateColumns = "repeat(1, 1fr)";
+  } else {
+    title.textContent = currentPage === 1 ? "ELITE CUP STANDINGS 1-32" : "ELITE CUP STANDINGS 33-64";
+    container.style.gridTemplateColumns = "repeat(4, 1fr)";
+  }
+}
+
+function setMode(mode) {
+  viewMode = (viewMode === mode) ? 'ALL' : mode;
+  updateHeaderAndGrid();
+  renderStandings(allFinalData);
+}
+
 function togglePage() {
-  currentPage = (currentPage === 1) ? 2 : 1;
+  if (viewMode === 'ALL') {
+    currentPage = (currentPage === 1) ? 2 : 1;
+  } else {
+    viewMode = 'ALL';
+  }
+  updateHeaderAndGrid();
   renderStandings(allFinalData);
 }
 
@@ -195,55 +277,63 @@ function togglePage() {
    RENDER ENGINE
 ================================ */
 async function loadAll() {
-  // 1. Tell it to look at the Matches list in your CONFIG file
   for (const match of CONFIG.STANDINGS.MATCHES) {
-    
-    // 2. Tell it to use the Proxy Base from your CONFIG file
     const res = await fetch(CONFIG.PROXY_BASE + match);
-    
     const data = await res.json();
     (data?.results || []).forEach((entry, index) => {
       const name = entry.player?.name || "Unknown";
       if (!championship[name]) {
-        championship[name] = { 
-            points: 0, 
-            country: findCountryCode(entry.player) 
-        };
+        championship[name] = { points: 0, country: findCountryCode(entry.player) };
       }
       championship[name].points += getPoints(index + 1);
     });
   }
-
   allFinalData = Object.entries(championship)
     .map(([name, info]) => ({ name, points: info.points, country: info.country }))
     .sort((a, b) => b.points - a.points);
-
+  updateHeaderAndGrid();
   renderStandings(allFinalData);
 }
 
 function renderStandings(data) {
   const container = document.getElementById("standings");
   container.innerHTML = "";
+  let displayData = [];
   const start = (currentPage - 1) * 32;
-  
-  data.slice(start, start + 32).forEach((player, index) => {
+
+  if (viewMode === 'ENC') {
+    const seen = new Set();
+    displayData = data.filter(p => {
+      if (seen.has(p.country) || p.country === 'un') return false;
+      seen.add(p.country);
+      return true;
+    }).slice(0, 16);
+  } else if (viewMode === 'EWC') {
+    displayData = data.slice(0, 8);
+  } else {
+    displayData = data.slice(start, start + 32);
+  }
+
+  displayData.forEach((player, index) => {
     const team = getTeamData(player.name);
     const row = document.createElement("div");
     row.className = "standing-item";
 
-    const leftGroup = document.createElement("div");
-    leftGroup.className = "name-meta-wrapper";
-
-    const rank = document.createElement("span");
+    const rank = document.createElement("div");
     rank.className = "rank-number";
-    rank.textContent = start + index + 1; 
-    leftGroup.appendChild(rank);
+    rank.textContent = (viewMode === 'ALL') ? (start + index + 1) : (index + 1);
+    row.appendChild(rank);
+
+    const dataBox = document.createElement("div");
+    dataBox.className = "player-data-box";
+
+    const nameGroup = document.createElement("div");
+    nameGroup.className = "name-meta-wrapper";
 
     const flag = document.createElement("img");
     flag.className = "flag-icon";
     flag.src = `https://flagcdn.com/w40/${player.country}.png`;
     flag.onerror = function() { this.src='https://flagcdn.com/w40/un.png'; };
-    leftGroup.appendChild(flag);
 
     const textStack = document.createElement("div");
     textStack.className = "name-meta-text-wrapper";
@@ -259,14 +349,17 @@ function renderStandings(data) {
       tName.textContent = team.fullName;
       textStack.appendChild(tName);
     }
-    leftGroup.appendChild(textStack);
+
+    nameGroup.appendChild(flag);
+    nameGroup.appendChild(textStack);
 
     const pts = document.createElement("span");
     pts.className = "points-val";
     pts.textContent = player.points;
 
-    row.appendChild(leftGroup);
-    row.appendChild(pts);
+    dataBox.appendChild(nameGroup);
+    dataBox.appendChild(pts);
+    row.appendChild(dataBox);
     container.appendChild(row);
   });
 }
@@ -274,5 +367,4 @@ function renderStandings(data) {
 loadAll();
 </script>
 </body>
-
 </html>
