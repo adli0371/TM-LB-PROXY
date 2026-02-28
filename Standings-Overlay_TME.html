@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Elite Cup Standings</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+
+<style>
+body { margin: 0; background: transparent; overflow: hidden; }
+
+/* Invisible Toggle Hitbox - Covers left half of the screen */
+#toggleBtn {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 50vw;       
+  height: 100vh;      
+  background: transparent; 
+  border: none;
+  cursor: pointer;    
+  z-index: 9999;      
+  outline: none;
+}
+
+/* Master Grid Position */
+.standings {
+  position: absolute;
+  left: 134px; 
+  top: 365px;
+  display: grid;
+  grid-template-rows: repeat(8, 56px);
+  grid-auto-flow: column;
+  row-gap: 10px;    
+  column-gap: 10px; 
+}
+
+/* The Total 406px Row */
+.standing-item {
+  width: 406px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; 
+  padding-right: 15px; 
+  box-sizing: border-box;
+  font-family: 'Montserrat', sans-serif;
+  color: white;
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Left-Aligned Group: Rank + Flag + Name */
+.name-meta-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+/* 56x56 Centered Rank Box */
+.rank-number {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #262626; 
+  font-size: 28px;
+  font-weight: 600;
+}
+
+/* Flag Icon */
+.flag-icon {
+  width: 32px;
+  height: auto;
+  margin-left: 20px; 
+  flex-shrink: 0;
+  box-shadow: 0 0 4px rgba(0,0,0,0.5);
+}
+
+/* Vertical Text Stack */
+.name-meta-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.1;
+  margin-left: 15px; 
+}
+
+.player-name {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.team-full-name {
+  font-size: 14px;
+  color: #adadad; 
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+/* Points Styling */
+.points-val {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+
+<body>
+
+<button id="toggleBtn" onclick="togglePage()"></button>
+
+<div class="standings" id="standings"></div>
+
+<script src="config.js"></script>
+<script>
+/* ===============================
+   CONFIG & STATE
+================================ */
+const MATCHES = ["comp/41163/match/132456/0", "comp/41289/match/132863/0"];
+const PROXY_BASE = "https://tm-lb-proxy.vercel.app/api/proxy?path=";
+
+let championship = {};
+let allFinalData = []; 
+let currentPage = 1;
+
+const TM_TO_ISO = {
+  "eng": "gb", "sct": "gb", "wal": "gb", "en": "gb", "gbr": "gb",
+  "swe": "se", "nor": "no", "den": "dk", "fin": "fi", "ned": "nl", 
+  "bel": "be", "lux": "lu", "irl": "ie", "ger": "de", "sui": "ch", 
+  "aut": "at", "pol": "pl", "cze": "cz", "svk": "sk", "slo": "si", 
+  "cro": "hr", "hun": "hu", "rom": "ro", "bul": "bg", "gre": "gr", 
+  "tur": "tr", "fra": "fr", "esp": "es", "ita": "it", "por": "pt",
+  "usa": "us", "can": "ca", "bra": "br", "aus": "au", "nzl": "nz", "rsa": "za"
+};
+
+const TEAMS = [
+  { keywords: ["Bren", "TwistedMinds"], fullName: "Twisted Minds" },
+  { keywords: ["Gwen", "Binkss", "AGG"], fullName: "All Gamers Global" },
+  { keywords: ["Tjalic", "Glast", "BS+"], fullName: "BS+COMPETITION" },
+  { keywords: ["CarlJr", "Spam", "FAL"], fullName: "Falcons Esports" },
+  { keywords: ["Massa", "Granady", "BIG"], fullName: "BIG" },
+  { keywords: ["Epos", "Liquid", "TL"], fullName: "Team Liquid" },
+  { keywords: ["Elconn", "NEM"], fullName: "Nemesis" },
+  { keywords: ["Mime", "NAVI"], fullName: "Natus Vincere" },
+  { keywords: ["Wosile", "GEN"], fullName: "Gen.G" },
+  { keywords: ["Nayko", "FUT"], fullName: "FUT Esports" }
+];
+
+/* ===============================
+   CORE LOGIC
+================================ */
+function getPoints(position) {
+  if (position === 1) return 1000;
+  if (position === 2) return 700;
+  if (position === 3) return 600;
+  if (position === 4) return 500;
+  if (position === 5) return 400;
+  if (position === 6) return 300;
+  if (position === 7) return 200;
+  if (position === 8) return 100;
+  if (position >= 9 && position <= 16) return 96 - ((position - 9) * 4);
+  if (position >= 17 && position <= 32) return 64 - (Math.floor((position - 17) / 2) * 4);
+  if (position >= 33 && position <= 64) return 32 - (Math.floor((position - 33) / 2) * 2);
+  return 0;
+}
+
+function findCountryCode(playerObj) {
+  let current = playerObj.zone;
+  while (current) {
+    if (current.flag && current.flag.length === 3) {
+      const code = current.flag.toLowerCase();
+      return TM_TO_ISO[code] || code.substring(0, 2);
+    }
+    current = current.parent;
+  }
+  return "un";
+}
+
+/* Update getTeamData to use the config */
+function getTeamData(playerName) {
+  const nameUpper = playerName.toUpperCase();
+  return CONFIG.STANDINGS.TEAMS.find(team => 
+    team.keywords.some(key => nameUpper.includes(key.toUpperCase()))
+  ) || null;
+}
+
+function togglePage() {
+  currentPage = (currentPage === 1) ? 2 : 1;
+  renderStandings(allFinalData);
+}
+
+/* ===============================
+   RENDER ENGINE
+================================ */
+async function loadAll() {
+  // Use CONFIG.STANDINGS.MATCHES
+  for (const match of CONFIG.STANDINGS.MATCHES) {
+    const res = await fetch(CONFIG.PROXY_BASE + match);
+    const data = await res.json();
+    (data?.results || []).forEach((entry, index) => {
+      const name = entry.player?.name || "Unknown";
+      if (!championship[name]) {
+        championship[name] = { points: 0, country: findCountryCode(entry.player) };
+      }
+      championship[name].points += getPoints(index + 1);
+    });
+  }
+
+  allFinalData = Object.entries(championship)
+    .map(([name, info]) => ({ name, points: info.points, country: info.country }))
+    .sort((a, b) => b.points - a.points);
+
+  renderStandings(allFinalData);
+}
+
+function renderStandings(data) {
+  const container = document.getElementById("standings");
+  container.innerHTML = "";
+  const start = (currentPage - 1) * 32;
+  
+  data.slice(start, start + 32).forEach((player, index) => {
+    const team = getTeamData(player.name);
+    const row = document.createElement("div");
+    row.className = "standing-item";
+
+    const leftGroup = document.createElement("div");
+    leftGroup.className = "name-meta-wrapper";
+
+    const rank = document.createElement("span");
+    rank.className = "rank-number";
+    rank.textContent = start + index + 1; 
+    leftGroup.appendChild(rank);
+
+    const flag = document.createElement("img");
+    flag.className = "flag-icon";
+    flag.src = `https://flagcdn.com/w40/${player.country}.png`;
+    flag.onerror = function() { this.src='https://flagcdn.com/w40/un.png'; };
+    leftGroup.appendChild(flag);
+
+    const textStack = document.createElement("div");
+    textStack.className = "name-meta-text-wrapper";
+    
+    const pName = document.createElement("span");
+    pName.className = "player-name";
+    pName.textContent = player.name;
+    textStack.appendChild(pName);
+
+    if (team) {
+      const tName = document.createElement("span");
+      tName.className = "team-full-name";
+      tName.textContent = team.fullName;
+      textStack.appendChild(tName);
+    }
+    leftGroup.appendChild(textStack);
+
+    const pts = document.createElement("span");
+    pts.className = "points-val";
+    pts.textContent = player.points;
+
+    row.appendChild(leftGroup);
+    row.appendChild(pts);
+    container.appendChild(row);
+  });
+}
+
+loadAll();
+</script>
+</body>
+</html>
