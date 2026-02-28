@@ -10,7 +10,7 @@ const CONFIG = {
     MATCHES: [
       "comp/41163/match/132456/0",
       "comp/41289/match/132863/0",
-       
+       //"comp/41423/match/MatchNum/0"
     ],
     TEAMS: [
       { keywords: ["Bren", "TwistedMinds"], fullName: "Twisted Minds" },
@@ -37,5 +37,6 @@ const CONFIG = {
     MAP_UID: "ojMNOzxBR2kqhH3T5z3ZqtGca98"
   }
 };
+
 
 
