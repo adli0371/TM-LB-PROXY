@@ -121,9 +121,6 @@ body { margin: 0; background: transparent; overflow: hidden; }
 /* ===============================
    CONFIG & STATE
 ================================ */
-const MATCHES = ["comp/41163/match/132456/0", "comp/41289/match/132863/0"];
-const PROXY_BASE = "https://tm-lb-proxy.vercel.app/api/proxy?path=";
-
 let championship = {};
 let allFinalData = []; 
 let currentPage = 1;
@@ -198,14 +195,20 @@ function togglePage() {
    RENDER ENGINE
 ================================ */
 async function loadAll() {
-  // Use CONFIG.STANDINGS.MATCHES
+  // 1. Tell it to look at the Matches list in your CONFIG file
   for (const match of CONFIG.STANDINGS.MATCHES) {
+    
+    // 2. Tell it to use the Proxy Base from your CONFIG file
     const res = await fetch(CONFIG.PROXY_BASE + match);
+    
     const data = await res.json();
     (data?.results || []).forEach((entry, index) => {
       const name = entry.player?.name || "Unknown";
       if (!championship[name]) {
-        championship[name] = { points: 0, country: findCountryCode(entry.player) };
+        championship[name] = { 
+            points: 0, 
+            country: findCountryCode(entry.player) 
+        };
       }
       championship[name].points += getPoints(index + 1);
     });
@@ -271,4 +274,5 @@ function renderStandings(data) {
 loadAll();
 </script>
 </body>
+
 </html>
