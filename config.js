@@ -23,7 +23,8 @@ const CONFIG = {
       { keywords: ["Mime", "NAVI"], fullName: "Natus Vincere" },
       { keywords: ["Wosile", "GEN"], fullName: "Gen.G" },
       { keywords: ["Nayko", "FUT"], fullName: "FUT Esports" },
-      { keywords: ["Heav", "Weibo"], fullName: "Weibo Gaming" }
+      { keywords: ["Heav", "Weibo"], fullName: "Weibo Gaming" },
+      { keywords: ["PACTM", "Vitality"], fullName: "Team Vitality" }
     ]
   },
 
@@ -37,6 +38,7 @@ const CONFIG = {
     MAP_UID: "ojMNOzxBR2kqhH3T5z3ZqtGca98"
   }
 };
+
 
 
 
