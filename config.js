@@ -24,20 +24,22 @@ const CONFIG = {
       { keywords: ["Wosile", "GEN"], fullName: "Gen.G" },
       { keywords: ["Nayko", "FUT"], fullName: "FUT Esports" },
       { keywords: ["Heav", "Weibo"], fullName: "Weibo Gaming" },
-      { keywords: ["PACTM", "Vitality"], fullName: "Team Vitality" }
+      { keywords: ["PACTM", "Vitality"], fullName: "Team Vitality" },
+      { keywords: ["Mudda"], fullName: "ROC Esports" }
     ]
   },
 
   QUALI: {
-    COMP_ID: 41423,
-    CHALLENGE_ID: 19566
+    COMP_ID: 41578,
+    CHALLENGE_ID: 19681
   },
 
   WR: {
     CAMPAIGN_UID: "NLS-3bSJJT2tUkmz2kZPUcVEfGPe2E35kcm4kop",
-    MAP_UID: "ojMNOzxBR2kqhH3T5z3ZqtGca98"
+    MAP_UID: "wAYNjx6rDiUTiYjDGtDliEsNlR6"
   }
 };
+
 
 
 
