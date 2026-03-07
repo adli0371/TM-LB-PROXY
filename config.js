@@ -15,7 +15,7 @@ const CONFIG = {
     TEAMS: [
       { keywords: ["Bren", "TwistedMinds"], fullName: "Twisted Minds" },
       { keywords: ["Gwen", "Binkss", "AGG"], fullName: "All Gamers Global" },
-      { keywords: ["Tjalic", "Glast", "BS+"], fullName: "BS+COMPETITION" },
+      { keywords: ["Tjalic", "Glast", "Snow.qlf", "BS+"], fullName: "BS+COMPETITION" },
       { keywords: ["CarlJr", "Spam", "FAL"], fullName: "Falcons Esports" },
       { keywords: ["Massa", "Granady", "BIG"], fullName: "BIG" },
       { keywords: ["Epos", "Otaaaq", "TL"], fullName: "Team Liquid" },
@@ -39,6 +39,7 @@ const CONFIG = {
     MAP_UID: "wAYNjx6rDiUTiYjDGtDliEsNlR6"
   }
 };
+
 
 
 
