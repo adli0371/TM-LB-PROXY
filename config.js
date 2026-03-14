@@ -31,13 +31,13 @@ const CONFIG = {
   },
 
   QUALI: {
-    COMP_ID: 41578,
-    CHALLENGE_ID: 19681
+    COMP_ID: 41733,
+    CHALLENGE_ID: 19798
   },
 
   WR: {
     CAMPAIGN_UID: "NLS-3bSJJT2tUkmz2kZPUcVEfGPe2E35kcm4kop",
-    MAP_UID: "wAYNjx6rDiUTiYjDGtDliEsNlR6"
+    MAP_UID: "0aI70GQW4729dPvPp_2oEJa4xxg"
   }
 };
 
