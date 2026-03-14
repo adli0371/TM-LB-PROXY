@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Elite Cup - Regional Progression (Config Driven)</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="config.js"></script>
+
+<style>
+body { margin: 0; background: transparent; overflow: hidden; font-family: 'Montserrat', sans-serif; }
+
+#click-zone-left { position: absolute; left: 0; top: 0; width: 50%; height: 100%; z-index: 100; cursor: pointer; }
+#click-zone-right { position: absolute; left: 50%; top: 0; width: 50%; height: 100%; z-index: 100; cursor: pointer; }
+
+#header-container {
+  position: absolute;
+  left: 134px;
+  top: 180px;
+  width: 1654px;
+  pointer-events: none;
+}
+#header-title { font-size: 64px; font-weight: 600; color: white; text-transform: uppercase; margin-bottom: 20px; }
+#header-line { width: 100%; height: 2px; background: white; margin-bottom: 20px; }
+
+#graph-wrap {
+  position: absolute;
+  left: 134px;
+  top: 340px;
+  width: 1654px;
+  height: 560px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid white;
+  padding: 30px;
+  box-sizing: border-box;
+  pointer-events: none;
+}
+</style>
+</head>
+
+<body>
+
+<div id="click-zone-left" onclick="updateRegion('gb')"></div>
+<div id="click-zone-right" onclick="updateRegion('fr')"></div>
+
+<div id="header-container">
+  <div id="header-title">REGIONAL PROGRESSION</div>
+  <div id="header-line"></div>
+</div>
+
+<div id="graph-wrap">
+  <canvas id="progressionChart"></canvas>
+</div>
+
+<script>
+// Pulling constants from your config.js
+const MATCH_LIST = CONFIG.STANDINGS.MATCHES;
+const BASE_URL = CONFIG.PROXY_BASE;
+
+let championship = {};
+let chartInstance = null;
+const labels = ["START", "CHN", "FRA", "USA", "BRA"];
+
+const TM_TO_ISO = {
+  "eng": "gb", "sct": "gb", "wal": "gb", "en": "gb", "gbr": "gb",
+  "fra": "fr"
+};
+
+// Helper to find Team Name based on your keywords
+function getDisplayName(playerName) {
+  const teamMatch = CONFIG.STANDINGS.TEAMS.find(t => 
+    t.keywords.some(k => playerName.toLowerCase().includes(k.toLowerCase()))
+  );
+  return teamMatch ? `${playerName} (${teamMatch.fullName})` : playerName;
+}
+
+function getPoints(position) {
+  if (position === 1) return 1000;
+  if (position === 2) return 700;
+  if (position === 3) return 600;
+  if (position === 4) return 500;
+  if (position <= 8) return 500 - (position - 4) * 100;
+  if (position <= 16) return 96 - ((position - 9) * 4);
+  if (position <= 32) return 64 - (Math.floor((position - 17) / 2) * 4);
+  return 32 - (Math.floor((position - 33) / 2) * 2);
+}
+
+function findCountryCode(playerObj) {
+  let current = playerObj.zone;
+  while (current) {
+    if (current.flag && current.flag.length === 3) {
+      const code = current.flag.toLowerCase();
+      return TM_TO_ISO[code] || code.substring(0, 2);
+    }
+    current = current.parent;
+  }
+  return "un";
+}
+
+async function loadData() {
+  for (const match of MATCH_LIST) {
+    try {
+      const res = await fetch(BASE_URL + match);
+      const data = await res.json();
+      
+      (data?.results || []).forEach((entry, idx) => {
+        const name = entry.player?.name || "Unknown";
+        if (!championship[name]) {
+          championship[name] = { 
+            totalRunning: 0, 
+            history: [0], 
+            country: findCountryCode(entry.player),
+            displayName: getDisplayName(name) 
+          };
+        }
+        championship[name].totalRunning += getPoints(idx + 1);
+        championship[name].history.push(championship[name].totalRunning);
+      });
+
+      Object.values(championship).forEach(p => {
+        const expectedLength = MATCH_LIST.indexOf(match) + 2;
+        if(p.history.length < expectedLength) p.history.push(p.totalRunning);
+      });
+    } catch (e) { console.error("Error loading match:", match, e); }
+  }
+  updateRegion('gb'); 
+}
+
+function updateRegion(code) {
+  let filtered = Object.entries(championship)
+    .map(([name, info]) => ({ name, ...info }))
+    .filter(p => p.country === code)
+    .sort((a, b) => b.totalRunning - a.totalRunning);
+
+  if (code === 'fr') {
+    filtered = filtered.slice(0, 10);
+    document.getElementById('header-title').textContent = "FRANCE TOP 10";
+  } else {
+    document.getElementById('header-title').textContent = "UK PROGRESSION";
+  }
+
+  renderGraph(filtered);
+}
+
+function renderGraph(data) {
+  const ctx = document.getElementById('progressionChart').getContext('2d');
+  if (chartInstance) chartInstance.destroy();
+
+  const colors = ['#00f2ff', '#7000ff', '#ff0055', '#39ff14', '#ffe000', '#ff8c00', '#0049ff', '#ff00fb', '#00ffcc', '#ff3300'];
+
+  chartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: data.map((p, i) => ({
+        label: p.displayName, // Uses the Team-aware name
+        data: p.history,
+        borderColor: colors[i % colors.length],
+        borderWidth: 4,
+        tension: 0.1,
+        pointRadius: 5,
+        fill: false
+      }))
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: {
+            color: 'white',
+            usePointStyle: true,
+            pointStyle: 'rect',
+            font: { family: 'Montserrat', size: 13, weight: '600' },
+            padding: 12
+          }
+        }
+      },
+      scales: {
+        y: { ticks: { color: 'white', font: { size: 24 } }, grid: { color: 'rgba(255,255,255,0.1)' } },
+        x: { ticks: { color: 'white', font: { size: 24 } }, grid: { display: false } }
+      }
+    }
+  });
+}
+
+loadData();
+</script>
+</body>
+</html>
